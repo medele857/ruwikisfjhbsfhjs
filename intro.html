@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>МапДев Вики — Войти</title>
+  <link rel="icon" type="image/jpeg" href="fav.jpg">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { margin:0; background:#0a0a0d; overflow:hidden; }
+
+    .intro-wrap {
+      width:100vw; height:100vh;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      gap:32px;
+      font-family: 'MinecraftRus', monospace;
+      color:#f0f0f0;
+      position:relative;
+    }
+
+    /* pixel scanlines */
+    .intro-wrap::before {
+      content:'';
+      position:fixed; inset:0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.18) 3px,
+        rgba(0,0,0,0.18) 4px
+      );
+      pointer-events:none; z-index:10;
+    }
+
+    .intro-logo {
+      display:flex; flex-direction:column; align-items:center; gap:12px;
+      animation: fadeUp .8s ease forwards;
+      opacity:0;
+    }
+    .intro-logo img { width:72px; image-rendering:pixelated; }
+    .intro-logo .site-name { font-size:22px; letter-spacing:.08em; color:#f0f0f0; }
+
+    .intro-label {
+      font-size:13px; color:#aaa; letter-spacing:.06em;
+      animation: fadeUp .8s ease .2s forwards; opacity:0;
+      text-align:center; line-height:1.8;
+    }
+
+    /* ── audio player ── */
+    .audio-box {
+      display:flex; flex-direction:column; align-items:center; gap:14px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:8px;
+      padding:24px 36px;
+      animation: fadeUp .8s ease .35s forwards; opacity:0;
+      min-width:300px;
+    }
+
+    .track-name { font-size:11px; color:#888; letter-spacing:.1em; text-transform:uppercase; }
+
+    .audio-controls { display:flex; align-items:center; gap:14px; width:100%; }
+
+    .play-btn {
+      width:40px; height:40px; border-radius:4px;
+      background:var(--accent, #9b5ff0);
+      border:none; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      font-size:16px; color:#fff;
+      transition:transform .15s, background .15s;
+      flex-shrink:0;
+    }
+    .play-btn:hover { transform:scale(1.1); background:var(--accent2, #7b3fd0); }
+
+    .progress-wrap {
+      flex:1; height:6px; background:rgba(255,255,255,0.1);
+      border-radius:3px; cursor:pointer; position:relative; overflow:hidden;
+    }
+    .progress-fill {
+      height:100%; width:0%; background:var(--accent, #9b5ff0);
+      border-radius:3px; transition:width .1s linear; pointer-events:none;
+    }
+
+    .time-label { font-size:10px; color:#666; min-width:36px; text-align:right; }
+
+    /* ── enter button (hidden until unlocked) ── */
+    .enter-btn {
+      font-family:'MinecraftRus', monospace;
+      font-size:13px; letter-spacing:.06em;
+      padding:14px 32px;
+      background:var(--accent, #9b5ff0);
+      color:#fff; border:none; border-radius:6px;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-block;
+      animation: fadeUp .5s ease forwards; opacity:0;
+      transition:transform .15s, background .15s, box-shadow .15s;
+    }
+    .enter-btn:hover {
+      transform:scale(1.06);
+      background:var(--accent2, #7b3fd0);
+      box-shadow:0 0 22px rgba(155,95,240,0.4);
+    }
+    .enter-btn.hidden { opacity:0 !important; pointer-events:none; }
+
+    .skip-hint {
+      font-size:10px; color:#444; letter-spacing:.05em;
+      animation: fadeUp .6s ease .5s forwards; opacity:0;
+      transition:color .3s;
+    }
+    .skip-hint.active { color:#666; }
+    .skip-hint.clickable { color:#888; cursor:pointer; }
+    .skip-hint.clickable:hover { color:#aaa; }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(16px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    [data-theme="light"] .intro-wrap { background:#f4f7f0; color:#111; }
+    [data-theme="light"] body { background:#f4f7f0; }
+  </style>
+</head>
+<body>
+
+<div class="intro-wrap">
+
+  <div class="intro-logo">
+    <img src="medele.png" alt="logo">
+    <span class="site-name">МапДев Вики</span>
+  </div>
+
+  <p class="intro-label">Прежде чем войти...<br>Послушай это. Мы не торопим. Ну почти.</p>
+
+  <div class="audio-box">
+    <span class="track-name">Морген Басс</span>
+    <div class="audio-controls">
+      <button class="play-btn" id="playBtn">▶</button>
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <span class="time-label" id="timeLabel">0:00</span>
+    </div>
+  </div>
+
+  <a href="index.html" class="enter-btn hidden" id="enterBtn">Войти на сайт →</a>
+
+  <span class="skip-hint" id="skipHint">Кнопка появится через <span id="countdown">15</span> сек...</span>
+
+</div>
+
+<audio id="track" src="morgen.mp3" preload="auto"></audio>
+
+<script>
+  // ── Theme inherit ──
+  const saved = localStorage.getItem('theme') || 'dark';
+  document.documentElement.dataset.theme = saved;
+
+  const audio    = document.getElementById('track');
+  const playBtn  = document.getElementById('playBtn');
+  const fill     = document.getElementById('progressFill');
+  const timeEl   = document.getElementById('timeLabel');
+  const enterBtn = document.getElementById('enterBtn');
+  const skipHint = document.getElementById('skipHint');
+  const countdown= document.getElementById('countdown');
+  const wrap     = document.getElementById('progressWrap');
+
+  let unlocked = false;
+  let secs = 15;
+
+  // ── countdown to show button ──
+  const timer = setInterval(() => {
+    secs--;
+    if (secs > 0) {
+      countdown.textContent = secs;
+      skipHint.classList.toggle('active', secs <= 5);
+    } else {
+      clearInterval(timer);
+      unlock();
+    }
+  }, 1000);
+
+  function unlock() {
+    if (unlocked) return;
+    unlocked = true;
+    enterBtn.classList.remove('hidden');
+    enterBtn.style.animation = 'fadeUp .5s ease forwards';
+    skipHint.textContent = 'Или можно остаться ещё...';
+    skipHint.classList.add('active');
+  }
+
+  // ── Play / pause ──
+  playBtn.addEventListener('click', () => {
+    if (audio.paused) { audio.play(); playBtn.textContent = '⏸'; }
+    else              { audio.pause(); playBtn.textContent = '▶'; }
+  });
+
+  audio.addEventListener('timeupdate', () => {
+    const pct = audio.duration ? (audio.currentTime / audio.duration * 100) : 0;
+    fill.style.width = pct + '%';
+    timeEl.textContent = fmt(audio.currentTime);
+    if (audio.currentTime >= audio.duration * 0.5) unlock(); // unlock at 50%
+  });
+
+  audio.addEventListener('ended', () => { playBtn.textContent = '▶'; unlock(); });
+
+  // ── Seek ──
+  wrap.addEventListener('click', e => {
+    if (!audio.duration) return;
+    const r = wrap.getBoundingClientRect();
+    audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration;
+  });
+
+  function fmt(s) {
+    const m = Math.floor(s/60);
+    const ss = Math.floor(s%60).toString().padStart(2,'0');
+    return m+':'+ss;
+  }
+</script>
+</body>
+</html>
