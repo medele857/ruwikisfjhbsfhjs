@@ -1,0 +1,114 @@
+
+/* ════ SCREAMER OVERLAYS ════ */
+.screamer-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  pointer-events: all;
+}
+
+.screamer-red {
+  position: absolute;
+  inset: 0;
+  background: #ff0000;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* HEAD screamer */
+.screamer-head {
+  width: 100vmin;
+  height: 100vmin;
+  image-rendering: pixelated;
+  position: relative;
+  z-index: 2;
+  transform: scale(0.05);
+}
+
+/* FOXY screamer */
+.screamer-foxy {
+  width: min(90vw, 90vh);
+  height: auto;
+  position: relative;
+  z-index: 2;
+  transform: scale(0.1);
+  image-rendering: auto;
+  filter: drop-shadow(0 0 40px rgba(255, 60, 0, 0.8));
+}
+
+.screamer-text {
+  position: absolute;
+  bottom: 15%;
+  font-size: clamp(32px, 8vw, 80px);
+  color: #fff;
+  text-shadow: 0 0 30px #ff3300, 0 0 60px #ff3300;
+  z-index: 3;
+  letter-spacing: .1em;
+  animation: textPulse .15s ease-in-out infinite alternate;
+}
+@keyframes textPulse {
+  from { transform: scale(1); }
+  to   { transform: scale(1.06); }
+}
+
+/* ════ DRAGGABLE HEAD ════ */
+.head-wrap {
+  position: fixed;
+  bottom: 80px;
+  right: 40px;
+  z-index: 500;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+.head-wrap.dragging { cursor: grabbing; }
+
+.head-img {
+  width: 80px;
+  height: 80px;
+  image-rendering: pixelated;
+  display: block;
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,.65));
+  transition: transform .15s, filter .3s;
+}
+.head-wrap:hover .head-img { transform: scale(1.08); }
+.head-wrap.angry .head-img {
+  filter: drop-shadow(0 0 12px rgba(220,60,60,.8)) drop-shadow(0 4px 14px rgba(0,0,0,.65));
+}
+
+/* speech bubble */
+.head-bubble {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  background: var(--bg2, #16161e);
+  border: 1px solid var(--border2, rgba(130,80,220,.55));
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 10px;
+  color: var(--text, #eeeef5);
+  font-family: var(--font, 'Courier New', monospace);
+  max-width: 220px;
+  white-space: normal;
+  line-height: 1.65;
+  opacity: 0;
+  transform: translateY(6px) scale(.94);
+  transition: opacity .2s, transform .2s;
+  pointer-events: none;
+  box-shadow: 0 4px 18px rgba(0,0,0,.5);
+}
+.head-bubble::after {
+  content: '';
+  position: absolute; bottom: -7px; right: 18px;
+  width: 12px; height: 7px;
+  background: var(--bg2, #16161e);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.head-bubble.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
